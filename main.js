@@ -144,7 +144,7 @@ for (const bountyJSON of bountiesJSON) {
 
 results.sort((x, y) => x[x.length - 1] - y[y.length - 1]);
 
-const output = ["price, issueNum, ownerUsername/repo, attempts.length, pullRequests.length, description"];
+const output = ["price, attempts.length, pullRequests.length, createdAt, description, url"];
 for (const result of results) {
     output.push(`${result[0]},${result[1]},${result[2]},${new Date(result[3]).toISOString()},"${result[4].replaceAll('"', '""')}",${result[5]}`)
 }
