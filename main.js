@@ -60,25 +60,25 @@ const pullRequestRegex = /\| #(\d+) \| \[Reward\]\(|pull\/\d+">#(\d+)<\/a><\/td>
 const allIssueNumberLikeRegex = /#(\d+)/g;
 
 const results = [];
-if (!Array.isArray(bountiesJSON)) throw Error;
+if (!Array.isArray(bountiesJSON)) throw new Error;
 for (const bountyJSON of bountiesJSON) {
     const [url, headline] = bountyJSON;
-    if (bountyJSON.length !== 2 || typeof url !== "string" || typeof headline !== "string") throw Error;
+    if (bountyJSON.length !== 2 || typeof url !== "string" || typeof headline !== "string") throw new Error;
     if (url.startsWith("https://algora.io")) continue; // https://algora.io/twentyhq glitch
 
     const urlParsed = urlRegex.exec(url);
-    if (urlParsed.length !== 4) throw Error;
+    if (urlParsed.length !== 4) throw new Error;
     const [urlAgain, ownerUsername, repo, issueNumStr] = urlParsed;
-    if (urlAgain !== url) throw Error;
+    if (urlAgain !== url) throw new Error;
     const issueNum = +issueNumStr;
-    if (`${issueNum}` !== issueNumStr) throw Error;
+    if (`${issueNum}` !== issueNumStr) throw new Error;
 
     const headlineParsed = headlineRegex.exec(headline);
-    if (headlineParsed.length !== 5) throw Error;
+    if (headlineParsed.length !== 5) throw new Error;
     const [headlineAgain, ownerName, issueNumStr2, priceStr, description] = headlineParsed;
-    if (headlineAgain !== headline || issueNumStr2 !== issueNumStr) throw Error;
+    if (headlineAgain !== headline || issueNumStr2 !== issueNumStr) throw new Error;
     const price = +(priceStr.replaceAll(",", ""));
-    if (price.toLocaleString("en-US") !== priceStr) throw Error;
+    if (price.toLocaleString("en-US") !== priceStr) throw new Error;
 
     const basePath = `cache/${ownerUsername}/${repo}/${issueNumStr}/`;
     await fs.mkdir(basePath, { recursive: true });
@@ -104,7 +104,7 @@ for (const bountyJSON of bountiesJSON) {
     for (const comment of commentsJSON) {
         const { body, user } = comment;
         if (!user.login.toLowerCase().includes("algora")) continue;
-        if ((user.id !== 121443259 || user.type !== "Bot") && (user.id !== 136125894 || user.type !== "User")) throw Error;
+        if ((user.id !== 121443259 || user.type !== "Bot") && (user.id !== 136125894 || user.type !== "User")) throw new Error;
         if (redundantRegex.test(body)) continue; // Redundant
         if (createdAt) {
             // Redirects inside transferred issues like https://github.com/tscircuit/3d-viewer/issues/534
