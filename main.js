@@ -167,14 +167,14 @@ for (const bountyJSON of bountiesJSON) {
     sortKey *= 1 / (attempts.length + 1); // Avoid saturated markets
     sortKey *= 1 / (now - createdAt); // Avoid stale issues from tightwads
 
-    results.push([price, attempts.length, pullRequests.length, openPullRequests, createdAt, description, url, sortKey]);
+    results.push([sortKey, price, attempts.length, pullRequests.length, openPullRequests, createdAt, description, url]);
 }
 
-results.sort((x, y) => x[x.length - 1] - y[y.length - 1]);
+results.sort((x, y) => x[0] - y[0]);
 
 const output = ["price, attempts.length, pullRequests.length, openPullRequests, createdAt, description, url"];
 for (const result of results) {
-    output.push(`${result[0]},${result[1]},${result[2]},${result[3]},${new Date(result[4]).toISOString()},"${result[5].replaceAll('"', '""')}",${result[6]}`)
+    output.push(`${result[1]},${result[2]},${result[3]},${result[4]},${new Date(result[5]).toISOString()},"${result[6].replaceAll('"', '""')}",${result[7]}`)
 }
 
 await fs.writeFile("bounties.csv", output.join("\n"));
