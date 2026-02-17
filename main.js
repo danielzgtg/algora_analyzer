@@ -2,6 +2,8 @@
 import { promises as fs } from "fs";
 import assert from "assert";
 
+const dateCutoff = new Date(2025,11-1,0).getTime();
+
 await fs.mkdir("cache", { recursive: true });
 const bountiesJSON = await (async () => {
     try {
@@ -146,6 +148,7 @@ for (const bountyJSON of bountiesJSON) {
         // Bot prevented from comments at https://github.com/rafael-fuente/diffractsim/issues/69
         continue;
     }
+    if (createdAt < dateCutoff) continue; // Stale
     for (const attemptComment of attemptComments) {
         if (!attempts.includes(attemptComment)) {
             attempts.push(attemptComment);
