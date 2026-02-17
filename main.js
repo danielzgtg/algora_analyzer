@@ -155,18 +155,26 @@ for (const bountyJSON of bountiesJSON) {
         }
     }
 
+    let openPullRequests = 0;
+    for (const pullRequestId of pullRequests) {
+        const pullRequestJSON = JSON.parse(await cacheFetch(basePath + `pull${pullRequestId}.json`, `https://api.github.com/repos/${ownerUsername}/${repo}/pulls/${pullRequestId}`));
+        if (pullRequestJSON.state === "open") {
+            ++openPullRequests;
+        }
+    }
+
     let sortKey = 1; // Most important at bottom, as terminal scrolls higher lines away
     sortKey *= 1 / (attempts.length + 1); // Avoid saturated markets
     sortKey *= 1 / (now - createdAt); // Avoid stale issues from tightwads
 
-    results.push([price, attempts.length, pullRequests.length, createdAt, description, url, sortKey]);
+    results.push([price, attempts.length, pullRequests.length, openPullRequests, createdAt, description, url, sortKey]);
 }
 
 results.sort((x, y) => x[x.length - 1] - y[y.length - 1]);
 
-const output = ["price, attempts.length, pullRequests.length, createdAt, description, url"];
+const output = ["price, attempts.length, pullRequests.length, openPullRequests, createdAt, description, url"];
 for (const result of results) {
-    output.push(`${result[0]},${result[1]},${result[2]},${new Date(result[3]).toISOString()},"${result[4].replaceAll('"', '""')}",${result[5]}`)
+    output.push(`${result[0]},${result[1]},${result[2]},${result[3]},${new Date(result[4]).toISOString()},"${result[5].replaceAll('"', '""')}",${result[6]}`)
 }
 
 await fs.writeFile("bounties.csv", output.join("\n"));
