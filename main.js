@@ -58,6 +58,7 @@ const redundantRegex = /submitted a.+pull request.+that claims the bounty. You c
 const attemptRegex = / @([a-zA-Z0-9-]{3,39}) \|| @([a-zA-Z0-9-]{3,39})<\/td>\n/g;
 const pullRequestRegex = /\| #(\d+) \| \[Reward\]\(|pull\/\d+">#(\d+)<\/a><\/td>\n/g;
 const allIssueNumberLikeRegex = /#(\d+)/g;
+const attemptCommentRegex = /^\/attempt #(\d+)$/;
 
 const now = new Date().getTime();
 const results = [];
@@ -78,6 +79,7 @@ for (const bountyJSON of bountiesJSON) {
     if (headlineParsed.length !== 5) throw new Error;
     const [headlineAgain, ownerName, issueNumStr2, priceStr, description] = headlineParsed;
     if (headlineAgain !== headline || issueNumStr2 !== issueNumStr) throw new Error;
+    if (description.includes("\n")) throw new Error;
     const price = +(priceStr.replaceAll(",", ""));
     if (price.toLocaleString("en-US") !== priceStr) throw new Error;
 
@@ -102,8 +104,18 @@ for (const bountyJSON of bountiesJSON) {
     let createdAt;
     const pullRequests = [];
     const attempts = [];
+    const attemptComments = [];
     for (const comment of commentsJSON) {
         const { body, user } = comment;
+        const attemptCommentParse = attemptCommentRegex.exec(body);
+        // Parse user comments because bot comment updates are broken at
+        // https://github.com/ClaperCo/Claper/issues/143#issuecomment-2966237986
+        if (attemptCommentParse) {
+            // Weird wrong issue number at https://github.com/projectdiscovery/nuclei/issues/6403#issuecomment-3892433467
+            if (attemptCommentParse[1] === issueNumStr) {
+                attemptComments.push(user);
+            }
+        }
         if (!user.login.toLowerCase().includes("algora")) continue;
         if ((user.id !== 121443259 || user.type !== "Bot") && (user.id !== 136125894 || user.type !== "User")) throw new Error;
         if (redundantRegex.test(body)) continue; // Redundant
@@ -134,9 +146,14 @@ for (const bountyJSON of bountiesJSON) {
         // Bot prevented from comments at https://github.com/rafael-fuente/diffractsim/issues/69
         continue;
     }
+    for (const attemptComment of attemptComments) {
+        if (!attempts.includes(attemptComment)) {
+            attempts.push(attemptComment);
+        }
+    }
 
     let sortKey = 1; // Most important at bottom, as terminal scrolls higher lines away
-    sortKey *= 1 / (pullRequests.length + 1); // Avoid saturated markets
+    sortKey *= 1 / (attempts.length + 1); // Avoid saturated markets
     sortKey *= 1 / (now - createdAt); // Avoid stale issues from tightwads
 
     results.push([price, attempts.length, pullRequests.length, createdAt, description, url, sortKey]);
