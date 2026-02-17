@@ -59,6 +59,7 @@ const attemptRegex = / @([a-zA-Z0-9-]{3,39}) \|| @([a-zA-Z0-9-]{3,39})<\/td>\n/g
 const pullRequestRegex = /\| #(\d+) \| \[Reward\]\(|pull\/\d+">#(\d+)<\/a><\/td>\n/g;
 const allIssueNumberLikeRegex = /#(\d+)/g;
 
+const now = new Date().getTime();
 const results = [];
 if (!Array.isArray(bountiesJSON)) throw new Error;
 for (const bountyJSON of bountiesJSON) {
@@ -134,10 +135,18 @@ for (const bountyJSON of bountiesJSON) {
         continue;
     }
 
-    results.push([price, issueNum, ownerUsername, repo, attempts.length, pullRequests.length, description]);
+    let sortKey = 1; // Most important at bottom, as terminal scrolls higher lines away
+    sortKey *= 1 / (pullRequests.length + 1); // Avoid saturated markets
+    sortKey *= 1 / (now - createdAt); // Avoid stale issues from tightwads
+
+    results.push([price, attempts.length, pullRequests.length, createdAt, description, url, sortKey]);
 }
 
-console.log("price, issueNum, ownerUsername, repo, attempts.length, pullRequests.length, description")
+results.sort((x, y) => x[x.length - 1] - y[y.length - 1]);
+
+const output = ["price, issueNum, ownerUsername/repo, attempts.length, pullRequests.length, description"];
 for (const result of results) {
-    console.log(`${result[0]},${result[1]},${result[2]},${result[3]},${result[4]},${result[5]},"${result[6].replaceAll('"', '""')}"`)
+    output.push(`${result[0]},${result[1]},${result[2]},${new Date(result[3]).toISOString()},"${result[4].replaceAll('"', '""')}",${result[5]}`)
 }
+
+await fs.writeFile("bounties.csv", output.join("\n"));
