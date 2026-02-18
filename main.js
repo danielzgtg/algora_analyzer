@@ -54,6 +54,25 @@ async function cacheFetch(path, url) {
     return fetched;
 }
 
+await (async () => {
+    const bountiesMTime = (await fs.stat("bounties.json")).mtimeMs;
+    let eventsMTime = 0;
+    try {
+        eventsMTime = (await fs.stat("cache/events.json")).mtimeMs;
+    } catch (e) {}
+    if (eventsMTime <= new Date().getTime() - 1000*60*60*24) {
+        try {
+            await fs.unlink("cache/events.json");
+        } catch (e) {}
+    }
+    const eventsJSON = JSON.parse(await cacheFetch("cache/events.json", "https://api.github.com/users/algora-pbc/events"));
+    const lastCreatedAt = eventsJSON[0]?.created_at;
+    if (lastCreatedAt && new Date(lastCreatedAt).getTime() > bountiesMTime) {
+        console.error("Please update bounties.json");
+        throw new Error;
+    }
+})();
+
 const urlRegex = /^https:\/\/github.com\/([a-zA-Z0-9-]{3,39})\/([A-Za-z0-9_.-]{2,100})\/issues\/(\d+)$/;
 const headlineRegex = /[A-Z]{2}\n([a-zA-Z0-9 ().,-]{3,39})\n#(\d+)\n\$([0-9,]+)\n([\][a-zA-Z0-9 ().,_:\/+<>`"=?\p{Emoji_Presentation}#'&-]+)$/u;
 const redundantRegex = /submitted a.+pull request.+that claims the bounty. You can.+visit your .+board.+to reward\.|The user @[a-zA-Z0-9-]{3,39} is already attempting to complete issue #\d+ and claim the bounty\. We recommend checking in on @[a-zA-Z0-9-]{3,39}'s progress, and potentially collaborating, before starting a new solution\.|@[a-zA-Z0-9-]{3,39}: Reminder that in 7 days the bounty will become up for grabs, so please submit a pull request before then|The bounty is up for grabs! Everyone is welcome to `\/attempt #\d+`|team prefers to assign a single contributor to the issue rather than let anyone attempt it right away. We recommend waiting for a confirmation from a member before getting started\.|@[a-zA-Z0-9-]{3,39}: Another person is already attempting this issue\. Please don't start working on this issue unless you were explicitly asked to do so\.|Note: The user @[a-zA-Z0-9-]{3,39} is already attempting to complete issue #\d+ and claim the bounty\. If you attempt to complete the same issue, there is a chance that @[a-zA-Z0-9-]{3,39} will complete the issue first, and be awarded the bounty\. We recommend discussing with @[a-zA-Z0-9-]{3,39} and potentially collaborating on the same solution versus creating an alternate solution\./;
