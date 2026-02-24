@@ -1,0 +1,22 @@
+{
+  "name": "algora_analyzer",
+  "version": "1.0.0",
+  "description": "Sorts GitHub issues referenced by https://algora.io/bounties .",
+  "homepage": "https://github.com/danielzgtg/algora_analyzer#readme",
+  "bugs": {
+    "url": "https://github.com/danielzgtg/algora_analyzer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielzgtg/algora_analyzer.git"
+  },
+  "license": "AGPL-3.0-or-later",
+  "author": "Daniel Tang <danielzgtg.opensource@gmail.com>",
+  "type": "module",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "node main.mjs"
+  }
+}

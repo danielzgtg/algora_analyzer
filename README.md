@@ -5,7 +5,7 @@ Sorts GitHub issues referenced by https://algora.io/bounties .
 ## Usage
 
 ```bash
-./main.js
+npm start
 ```
 
 ## License
